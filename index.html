@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>小日历组件</title>
+<style type="text/css">
+*{ margin:0; padding:0; list-style:none; font-family: "微软雅黑","张海山锐线体简"}
+.calender{ width: 350px; border: 1px solid #bababa; padding: 10px 20px 20px 20px;}
+.calender .title{ position: relative; font-weight: bold; margin: 10px 0}
+.calender .prev{ position: absolute; top: 0; left: 0; text-decoration: none; color: #ccc}
+.calender .next{ position: absolute; top: 0; right: 0; text-decoration: none; color: #ccc}
+.calender span{ display: block; text-align: center; line-height: 25px}
+.calender ol,.calender ul{ clear: both; overflow: hidden;}
+.calender ol li,.calender ul li{ float: left; width: 43px; height: 43px; text-align: center; margin: 3px; font-weight: bold;}
+.calender ul li{ background: #f2f2f2; line-height: 43px}
+.calender ul li:empty:hover{ cursor: default; background: #f2f2f2; color: #ccc}
+.calender ul li:hover{ background: #00afbc; color: #fff; cursor: pointer;}
+.calender .cur{ background: #00afbc; color: #fff}
+.calender .pass{ color: #ccc}
+.calender .pass:hover{ cursor: not-allowed; background: #f2f2f2; color: #ccc }
+.calender .pass:empty{ cursor: default;}
+.write{ position: absolute; top: 100px; left: 450px; height: 30px; width: 200px}
+</style>
+<script>
+window.onload=function(){
+	var aIpt=document.getElementsByTagName('input');
+	// oIpt.onclick=function(ev){
+	// 	var oEvt=ev||event;
+	// 	initCalendar(this,oEvt);
+	// 	// oIpt.value='';
+	// 	// oEvt.cancelBubble=true;
+	for (var i = 0; i < aIpt.length; i++) {
+		aIpt[i].onclick=initCalendar;
+	};
+	// oIpt.onclick=initCalendar;
+	}
+	function initCalendar(ev){
+		var oEvt=ev||event;
+		var _this=this;
+		var oldCalender=document.getElementsByClassName('calender')[0];
+		oldCalender&&document.body.removeChild(oldCalender);
+		//创建结构（空架子）
+		var oCalender=document.createElement('div');
+		var now=0; //控制换日期
+		oCalender.className='calender';
+		oCalender.innerHTML='\
+		<div class="title">\
+			<a href="#" class="prev">&lt;&lt;</a>\
+			<span class="ym">2015.8</span>\
+			<a href="#" class="next">&gt;&gt;</a>\
+		</div>\
+		<ol>\
+			<li>一</li>\
+			<li>二</li>\
+			<li>三</li>\
+			<li>四</li>\
+			<li>五</li>\
+			<li>六</li>\
+			<li>日</li>\
+		</ol>\
+		<ul></ul>'
+		document.body.appendChild(oCalender);
+		oCalender.style.left=_this.offsetLeft+'px';
+		oCalender.style.top=_this.offsetTop+_this.offsetHeight+'px';
+
+		//事件 月份切换：准备个now 昨天今天明天月份改变 还得变
+		oCalender.children[0].children[0].onclick=function(){
+			now--;
+			fillTime();
+		}
+		oCalender.children[0].children[2].onclick=function(){
+			now++;
+			fillTime();
+		}
+
+		document.onclick=function(){
+			var oldCalender=document.getElementsByClassName('calender')[0];
+			oldCalender&&document.body.removeChild(oldCalender);
+		}
+		oCalender.onclick=function(ev){(ev||event).cancelBubble=true;};
+		fillTime();
+		function fillTime(){
+			// alert(oCalender.children[2])
+			//创建日子 ul里的东西
+			oCalender.children[2].innerHTML='';
+			var d=new Date();
+			d.setMonth(d.getMonth()+now+1,0);//月加一日设置0 取本月最后一天
+			var lastDate=d.getDate();
+			for (var i = 1; i <= lastDate; i++) {
+				var oLi=document.createElement('li');
+
+				oLi.onclick=function(){
+					var d=new Date();
+					d.setMonth(d.getMonth()+now);
+					var year=d.getFullYear();
+					var month=d.getMonth()+1;
+					if (this.innerHTML=='今天'){
+						var date=d.getDate();
+					}else{
+						var date=this.innerHTML;
+					}
+					if(this.className=='pass') return;
+					_this.value=year+'-'+month+'-'+date;
+
+					var oldCalender=document.getElementsByClassName('calender')[0];
+					document.body.removeChild(oldCalender);
+				}
+				oLi.innerHTML=i;
+				oCalender.children[2].appendChild(oLi);
+				// document.body.removeChild(oCalender);
+			};
+			//取出周几 补空日子
+			var d=new Date();
+			d.setMonth(d.getMonth()+now);
+			d.setDate(1);
+			var week=d.getDay();
+			if(week==0){
+				week=7;
+			}
+			week--;
+			for (var i = 0; i < week; i++) {
+				var oLi=document.createElement('li');
+				oCalender.children[2].insertBefore(oLi,oCalender.children[2].children[0]);
+			};
+
+			//月变活
+			var d=new Date();
+			d.setMonth(d.getMonth()+now);
+			var month=d.getMonth()+1;
+			var year=d.getFullYear();
+			oCalender.children[0].children[1].innerHTML=year+'年'+month+'月';
+
+			//昨天 今天
+			var d=new Date();
+			// setMonth(getMonth()+now);
+			var today=d.getDate();
+			if(now==0){
+				for (var i = 0; i < oCalender.children[2].children.length; i++) {
+					if(oCalender.children[2].children[i].innerHTML==today){
+						oCalender.children[2].children[i].className='cur';
+						oCalender.children[2].children[i].innerHTML='今天';
+					}else if(oCalender.children[2].children[i].innerHTML<today){
+						oCalender.children[2].children[i].className='pass';
+					}
+				};
+			}else if(now<0){
+				for (var i = 0; i < oCalender.children[2].children.length; i++) {
+					oCalender.children[2].children[i].className='pass';
+				}
+			}
+		}
+		
+		//添加事件 a月份切换  b取日子
+		oEvt.cancelBubble=true;
+	}	
+		
+</script>
+</head>
+
+<body>
+<input type="text" class="write" id="ipt">
+</body>
+</html>
